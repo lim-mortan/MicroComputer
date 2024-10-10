@@ -1,13 +1,13 @@
 //////////////////////////////////////////////////////////////////////////////
-//   °úÁ¦¸í : ¿¤¸®º£ÀÌÅÍ Á¦¾î±â
-// 	 °úÁ¦°³¿ä : ¸ñÇ¥ ÃşÀ» ÀÔ·ÂÇÏ¸é ¿¤¸®º£ÀÌÅÍ¸¦ ¸ñÇ¥ Ãş(B~6Ãş)À¸·Î ÀÌµ¿ÇÏ°ÔÇÏ´Â 
-//           Á¦¾îÇÁ·Î±×·¥ ÀÛ¼º
+//   ê³¼ì œëª… : ì—˜ë¦¬ë² ì´í„° ì œì–´ê¸°
+// 	 ê³¼ì œê°œìš” : ëª©í‘œ ì¸µì„ ì…ë ¥í•˜ë©´ ì—˜ë¦¬ë² ì´í„°ë¥¼ ëª©í‘œ ì¸µ(B~6ì¸µ)ìœ¼ë¡œ ì´ë™í•˜ê²Œí•˜ëŠ” 
+//           ì œì–´í”„ë¡œê·¸ë¨ ì‘ì„±
 //            
-//   »ç¿ëÇÑ ÇÏµå¿ş¾î(±â´É) : GPIO, Switch, LED, GLCD, Buzzer
-//   Á¦ÃâÀÏ : 2022. 6.15
-//   Á¦ÃâÀÚ Å¬·¡½º : ¸ñ¿äÀÏ¹İ
-//          ÇĞ¹ø : 2017132030
-//          ÀÌ¸§ : ÀÓÇöÁ¾
+//   ì‚¬ìš©í•œ í•˜ë“œì›¨ì–´(ê¸°ëŠ¥) : GPIO, Switch, LED, GLCD, Buzzer
+//   ì œì¶œì¼ : 2022. 6.15
+//   ì œì¶œì í´ë˜ìŠ¤ : ëª©ìš”ì¼ë°˜
+//          í•™ë²ˆ : 2017132030
+//          ì´ë¦„ : ì„í˜„ì¢…
 //////////////////////////////////////////////////////////////////////////////
 
 #include "stm32f4xx.h"
@@ -23,7 +23,7 @@
 #define SW6_PUSH        0xBF00  //PH14
 #define SW7_PUSH        0x7F00  //PH15
 
-#define RGB_VIOLET GET_RGB(238,230,250) //º¸¶ó»ö
+#define RGB_VIOLET GET_RGB(238,230,250) //ë³´ë¼ìƒ‰
 
 void _GPIO_Init(void);
 void _EXTI_Init(void);
@@ -37,44 +37,43 @@ void DnMoveELDisplay(void);
 void Framff (void);
 
 void ELMovePaint(uint16_t display_x,uint16_t display_y,uint16_t display_w,uint16_t display_h);
-void DelayMS(unsigned short wMS);
+void DelayMS(unsigned short wMS);		//íƒ€ì„
 void DelayUS(unsigned short wUS);
 
 
-uint16_t arrive_count;  //6Ãş µµ´Ş È½¼ö
-uint16_t Mode = 0; //µ¿ÀÛ¸ğµå, Ãş¼±ÅÃ¸ğµå
-uint16_t goal_f = 1; //¸ñÇ¥ Ãş 
-uint16_t now_f = 1; //ÇöÀç Ãş(ÃÊ±â 1Ãş) 
+uint16_t arrive_count;  //6ì¸µ ë„ë‹¬ íšŸìˆ˜
+uint16_t Mode = 0; //ë™ì‘ëª¨ë“œ, ì¸µì„ íƒëª¨ë“œ
+uint16_t goal_f = 1; //ëª©í‘œ ì¸µ 
+uint16_t now_f = 1; //í˜„ì¬ ì¸µ(ì´ˆê¸° 1ì¸µ) 
 
 int main(void)
 {
-    Fram_Init();            // FRAM ÃÊ±âÈ­ H/W ÃÊ±âÈ­
-    Fram_Status_Config();   // FRAM ÃÊ±âÈ­ S/W ÃÊ±âÈ­ 
+    Fram_Init();            // FRAM ì´ˆê¸°í™” H/W ì´ˆê¸°í™”
+    Fram_Status_Config();   // FRAM ì´ˆê¸°í™” S/W ì´ˆê¸°í™” 
 
-    LCD_Init();	// LCD ¸ğµâ ÃÊ±âÈ­
+    LCD_Init();	// LCD ëª¨ë“ˆ ì´ˆê¸°í™”
     DelayMS(10);
-    _GPIO_Init();	// GPIO ÃÊ±âÈ­
-    _EXTI_Init();	// EXTI ÃÊ±âÈ­
+    _GPIO_Init();	// GPIO ì´ˆê¸°í™”
+    _EXTI_Init();	// EXTI ì´ˆê¸°í™”
 
-    DisplayInitScreen();	// LCD ÃÊ±âÈ­¸é
-    GPIOG->ODR &= ~0x00FF;	// ÃÊ±â°ª: LED0~7 Off
+    DisplayInitScreen();	// LCD ì´ˆê¸°í™”ë©´
+    GPIOG->ODR &= ~0x00FF;	// ì´ˆê¸°ê°’: LED0~7 Off
 
-    arrive_count = Fram_Read(616); //FRAM 616¹øÁö¿¡ 6Ãşµµ´ŞÈ½¼ö ÀúÀå
+    arrive_count = Fram_Read(616); //FRAM 616ë²ˆì§€ì— 6ì¸µë„ë‹¬íšŸìˆ˜ ì €ì¥
     uint16_t now_key = 0;
     while(1)
     {
-        if (Mode != 0) continue; //Ãş ¼±ÅÃ ¸ğµå
-        now_key = KEY_Scan();//Å°½ºÄµ°ª ¹Ş¾Æ¿È
+        if (Mode != 0) continue; //ì¸µ ì„ íƒ ëª¨ë“œ
+        now_key = KEY_Scan();//í‚¤ ìŠ¤ìº” ê°’ ë°›ì•„ì˜´
         if (now_key == 0xFE00)
         {
             GPIOG->ODR &= ~0x00FF; // LED0~7 OFF
             GPIOG->ODR |= 0X0001; 	//  LED0 ON                        
             LCD_SetTextColor(RGB_BLACK);
-           
             LCD_DisplayText(3, 3, "B");
             //BEEP();
-            goal_f = 0; //BÃş ¼±ÅÃ
-            EXTI->IMR |= 0x8000;  //EXTI15 Interrupt Mask¼³Á¤ - µ¿ÀÛ¸ğµå ÀÎÅÍ·´Æ® ¹ß»ı
+            goal_f = 0; //Bì¸µ ì„ íƒ
+            EXTI->IMR |= 0x8000;  //EXTI15 Interrupt Maskì„¤ì • - ë™ì‘ëª¨ë“œ ì¸í„°ëŸ½íŠ¸ ë°œìƒ
         }
         else if (now_key == 0xFD00)
             {
@@ -85,49 +84,46 @@ int main(void)
             else if (now_key == 0xFB00)
             {
                 GPIOG->ODR &= ~0x00FF;
-                GPIOG->ODR |= 0X0004;
+                GPIOG->ODR |= 0X0004;	// LED2 ON
                 goal_f = 2;
             }
             else if (now_key == 0xF700)
             {
                 GPIOG->ODR &= ~0x00FF;
-                GPIOG->ODR |= 0X0008;
+                GPIOG->ODR |= 0X0008;	//LED3 ON
                 goal_f = 3;
             }
             else if (now_key == 0xEF00)
             {
                 GPIOG->ODR &= ~0x00FF;
-                GPIOG->ODR |= 0X0010;
+                GPIOG->ODR |= 0X0010;	//LED4 ON
                 goal_f = 4;
             }
             else if (now_key == 0xDF00)
             {
                 GPIOG->ODR &= ~0x00FF;
-                GPIOG->ODR |= 0X0020;
+                GPIOG->ODR |= 0X0020;	//LED5 ON
                 goal_f = 5;
             }
             else if (now_key == 0xBF00)
             {
                 GPIOG->ODR &= ~0x00FF;
-                GPIOG->ODR |= 0X0040;
+                GPIOG->ODR |= 0X0040;	//LED6 ON
                 goal_f = 6;
             }
             
-        
-       
-
         LCD_SetTextColor(RGB_BLACK);
     LCD_DisplayChar(3, 3, 0x30 + goal_f);
     //BEEP();
-    EXTI->IMR |= 0x8000;  //µ¿ÀÛ¸ğµå ÀÎÅÍ·´Æ® ¹ß»ı
+    EXTI->IMR |= 0x8000;  //ë™ì‘ëª¨ë“œ ì¸í„°ëŸ½íŠ¸ ë°œìƒ
     }
 }
 
-/* GLCD ÃÊ±âÈ­¸é ¼³Á¤ ÇÔ¼ö */
+/* GLCD ì´ˆê¸°í™”ë©´ ì„¤ì • í•¨ìˆ˜ */
 void DisplayInitScreen(void)
 {
-    LCD_Clear(RGB_YELLOW);		// È­¸é Å¬¸®¾î Yellow
-    LCD_SetFont(&Gulim8);		// ÆùÆ® : ±¼¸² 8
+    LCD_Clear(RGB_YELLOW);		// í™”ë©´ í´ë¦¬ì–´ Yellow
+    LCD_SetFont(&Gulim8);		// í°íŠ¸ : êµ´ë¦¼ 8
 
     LCD_SetTextColor(RGB_BLACK);
     LCD_SetBackColor(RGB_YELLOW);
@@ -138,14 +134,14 @@ void DisplayInitScreen(void)
 
     LCD_SetTextColor(RGB_VIOLET);
     LCD_DisplayChar(2, 2, 'O');
-    arrive_count = Fram_Read(616); //FRAM 616¹øÁö¿¡ 6ÃşµµÂøÈ½¼ö ÀúÀå
-    LCD_DisplayChar(2, 8, 0x30 + arrive_count); //6Ãş µµÂø È½¼ö
+    arrive_count = Fram_Read(616); //FRAM 616ë²ˆì§€ì— 6ì¸µë„ì°©íšŸìˆ˜ ì €ì¥
+    LCD_DisplayChar(2, 8, 0x30 + arrive_count); //6ì¸µ ë„ì°© íšŸìˆ˜
 
 
-    LCD_SetTextColor(RGB_BLACK);	// ±ÛÀÚ»ö : Black
-    LCD_SetBackColor(RGB_YELLOW);	// ±ÛÀÚ¹è°æ»ö : YELLOW
+    LCD_SetTextColor(RGB_BLACK);	// ê¸€ììƒ‰ : Black
+    LCD_SetBackColor(RGB_YELLOW);	// ê¸€ìë°°ê²½ìƒ‰ : YELLOW
 
-    LCD_SetBrushColor(RGB_RED); //ÇöÀç ¿¤¸®º£ÀÌÅÍ À§Ä¡ Ç¥½Ã
+    LCD_SetBrushColor(RGB_RED); //í˜„ì¬ ì—˜ë¦¬ë² ì´í„° ìœ„ì¹˜ í‘œì‹œ
     LCD_DrawFillRect(55, 55, 8, 8);
     LCD_SetPenColor(RGB_GREEN);
     LCD_DrawRectangle(55, 55, 8, 8);
@@ -153,30 +149,28 @@ void DisplayInitScreen(void)
 }
 
 
-/* GPIO (GPIOG(LED), GPIOH(Switch), GPIOF(Buzzer)) ÃÊ±â ¼³Á¤	*/
+/* GPIO (GPIOG(LED), GPIOH(Switch), GPIOF(Buzzer)) ì´ˆê¸° ì„¤ì •	*/
 void _GPIO_Init(void)
 {
-    // LED (GPIO G) ¼³Á¤ : Output mode
+    // LED (GPIO G) ì„¤ì • : Output mode
     RCC->AHB1ENR |= 0x00000040;	// RCC_AHB1ENR : GPIOG(bit#6) Enable							
     GPIOG->MODER |= 0x00005555;	// GPIOG 0~7 : Output mode (0b01)						
     GPIOG->OTYPER &= ~0x00FF;	// GPIOG 0~7 : Push-pull  (GP8~15:reset state)	
     GPIOG->OSPEEDR |= 0x00005555;	// GPIOG 0~7 : Output speed 25MHZ Medium speed 
 
-    // SW (GPIO H) ¼³Á¤ : Input mode 
+    // SW (GPIO H) ì„¤ì • : Input mode 
     RCC->AHB1ENR |= 0x00000080;	// RCC_AHB1ENR : GPIOH(bit#7) Enable							
     GPIOH->MODER &= ~0xFFFF0000;	// GPIOH 8~15 : Input mode (reset state)				
     GPIOH->PUPDR &= ~0xFFFF0000;	// GPIOH 8~15 : Floating input (No Pull-up, pull-down) :reset state
 
-    // Buzzer (GPIO F) ¼³Á¤ : Output mode
+    // Buzzer (GPIO F) ì„¤ì • : Output mode
     RCC->AHB1ENR |= 0x00000020;	// RCC_AHB1ENR : GPIOF(bit#5) Enable							
     GPIOF->MODER |= 0x00040000;	// GPIOF 9 : Output mode (0b01)						
     GPIOF->OTYPER &= ~0x0200;	// GPIOF 9 : Push-pull  	
     GPIOF->OSPEEDR |= 0x00040000;	// GPIOF 9 : Output speed 25MHZ Medium speed 
 }
 
-
-
-/* EXTI ÃÊ±â ¼³Á¤  */
+/* EXTI ì´ˆê¸° ì„¤ì •  */
 void _EXTI_Init(void)
 {
     RCC->AHB1ENR |= 0x00000080;	// RCC_AHB1ENR GPIOH Enable  
@@ -184,28 +178,28 @@ void _EXTI_Init(void)
 
     GPIOH->MODER &= ~0xFFFF0000;	// GPIOH PIN8~PIN15 Input mode (reset state)				 
 
-    SYSCFG->EXTICR[3] |= 0x7000; //EXTI 15¿¡ ´ëÇÑ ¼Ò½º ÀÔ·ÂÀº GPIOH·Î ¼³Á¤
+    SYSCFG->EXTICR[3] |= 0x7000; //EXTI 15ì— ëŒ€í•œ ì†ŒìŠ¤ ì…ë ¥ì€ GPIOHë¡œ ì„¤ì •
 
     EXTI->FTSR |= 0x8000;		// EXTI15 Falling Trigger Enable 
 
-    EXTI->IMR |= 0x8000; //EXTI15 ÀÎÅÍ·´Æ® mask¼³Á¤
+    EXTI->IMR |= 0x8000; //EXTI15 ì¸í„°ëŸ½íŠ¸ maskì„¤ì •
 
     NVIC->ISER[1] |= (1 << 8); //Enable Interrupt EXTI15
 }
 
-/* EXTI15~10 ÀÎÅÍ·´Æ® ÇÚµé·¯(ISR: Interrupt Service Routine) */
+/* EXTI15~10 ì¸í„°ëŸ½íŠ¸ í•¸ë“¤ëŸ¬(ISR: Interrupt Service Routine) */
 void EXTI15_10_IRQHandler(void)
 {
-    if (EXTI->PR & 0x8000)  //EXTI15 : µ¿ÀÛ¸ğµå ÀÎÅÍ·´Æ®
+    if (EXTI->PR & 0x8000)  //EXTI15 : ë™ì‘ëª¨ë“œ ì¸í„°ëŸ½íŠ¸
     {
         EXTI->PR |= 0x8000;  //EXTI15 Pending bit clear
         GPIOG->ODR |= 0X0080; // LED 7 ON
-        Mode = 1; //ÇöÀç µ¿ÀÛ¸ğµå
+        Mode = 1; //í˜„ì¬ ë™ì‘ëª¨ë“œ
 
-        if (now_f < goal_f) //¿¤¸®º£ÀÌÅÍ »ó½Â ½Ã
+        if (now_f < goal_f) //ì—˜ë¦¬ë² ì´í„° ìƒìŠ¹ ì‹œ
         {
            UpMoveELDisplay();
-            for (int i = now_f; i <= goal_f; i++) {  //¿¤¸®º£ÀÌÅÍ »ó½Â½Ã Bar ±×¸®±â
+            for (int i = now_f; i <= goal_f; i++) {  //ì—˜ë¦¬ë² ì´í„° ìƒìŠ¹ì‹œ Bar ê·¸ë¦¬ê¸°
               ELMovePaint(40 + 16 * now_f, 55, 8 + (i - now_f) * 16, 8);  
             }
             for (int i = 0; i < 3; ++i)
@@ -213,24 +207,18 @@ void EXTI15_10_IRQHandler(void)
                 DelayMS(500);
                 BEEP();
             }
-
             LCD_SetTextColor(RGB_VIOLET);
             LCD_DisplayChar(2, 2, 'O');
             LCD_SetTextColor(RGB_BLACK);
             LCD_DisplayChar(2, 0, 'S');
-
-            
-
             Framff();
-
             }
         }
-         if (now_f > goal_f) //¿¤¸®º£ÀÌÅÍ ÇÏ°­ ½Ã
+         if (now_f > goal_f) //ì—˜ë¦¬ë² ì´í„° í•˜ê°• ì‹œ
         {
          
             DnMoveELDisplay();
-
-            for (int i = now_f; i > goal_f; i--) //¿¤¸®º£ÀÌÅÍ ÇÏ°­ Bar ±×¸®±â
+            for (int i = now_f; i > goal_f; i--) //ì—˜ë¦¬ë² ì´í„° í•˜ê°• Bar ê·¸ë¦¬ê¸°
             {
                ELMovePaint(55,40 + 16 * now_f,8 , 8 + (i - now_f) * 16);
             }
@@ -242,9 +230,9 @@ void EXTI15_10_IRQHandler(void)
 
             LCD_SetTextColor(RGB_BLACK);
             LCD_DisplayChar(2, 0, 'S');
-            now_f = goal_f; //ÇöÀçÃş ÃÊ±âÈ­
+            now_f = goal_f; //í˜„ì¬ì¸µ ì´ˆê¸°í™”
         }
-        if (now_f == goal_f)//: °°Àº Ãş ÀÔ·Â½Ã
+        if (now_f == goal_f)//: ê°™ì€ ì¸µ ì…ë ¥ì‹œ
         {
             EXTI->PR |= 0x8000; //EXTI15 Pending bit clear
             LCD_SetTextColor(RGB_VIOLET);
@@ -255,19 +243,19 @@ void EXTI15_10_IRQHandler(void)
             BEEP();
         }
         GPIOG->ODR &= ~0X0080; //LED7 OFF
-        EXTI->IMR &= ~0x8000; //EXTI15 ÀÎÅÍ·´Æ® mask Ç®±â
-        Mode = 0; // Ãş¼±ÅÃ¸ğµå
+        EXTI->IMR &= ~0x8000; //EXTI15 ì¸í„°ëŸ½íŠ¸ mask í’€ê¸°
+        Mode = 0; // ì¸µì„ íƒëª¨ë“œ
  }
 
 void Framff (void)
 {
-  now_f = goal_f;  //ÇöÀçÃş ÃÊ±âÈ­
-  if (now_f == 6) { //6Ãş µµ´Ş½Ã
+  now_f = goal_f;  //í˜„ì¬ì¸µ ì´ˆê¸°í™”
+  if (now_f == 6) { //6ì¸µ ë„ë‹¬ì‹œ
   arrive_count++;
-  Fram_Write(616, arrive_count); //FRAM616¹øÁö¿¡ 6ÃşµµÂøÈ½¼ö ÀúÀå
-  if (arrive_count > 9) { //6Ãşµµ´ŞÈ½¼ö 9->0
+  Fram_Write(616, arrive_count); //FRAM616ë²ˆì§€ì— 6ì¸µë„ì°©íšŸìˆ˜ ì €ì¥
+  if (arrive_count > 9) { //6ì¸µë„ë‹¬íšŸìˆ˜ 9->0
   arrive_count = 0;
-  Fram_Write(616, arrive_count); //FRAM616¹øÁö¿¡ 6ÃşµµÂøÈ½¼ö ÀúÀå
+  Fram_Write(616, arrive_count); //FRAM616ë²ˆì§€ì— 6ì¸µë„ì°©íšŸìˆ˜ ì €ì¥
  
   }
   
@@ -299,17 +287,17 @@ uint16_t KEY_Scan(void)	// input key SW0 - SW7
 	}
 }
 
-void UpMoveELDisplay(void)
+void UpMoveELDisplay(void)	//ìƒìŠ¹ ì—˜ë¦¬ë² ì´í„° í•¨ìˆ˜
 {
     LCD_SetTextColor(RGB_BLACK);
-    LCD_DisplayChar(2, 0, 'M');  //µ¿ÀÛ¸ğµå Ç¥½Ã
+    LCD_DisplayChar(2, 0, 'M');  //ë™ì‘ëª¨ë“œ í‘œì‹œ
     LCD_SetTextColor(RGB_RED);
-    LCD_DisplayChar(2, 2, '>');  //»ó½Â Ç¥½Ã
+    LCD_DisplayChar(2, 2, '>');  //ìƒìŠ¹ í‘œì‹œ
     LCD_SetBrushColor(RGB_YELLOW);
-    LCD_DrawFillRect(0, 52, 150, 15); // ¿¤¸®º£ÀÌÅÍ °æ·Î Áö¿ì±â
+    LCD_DrawFillRect(0, 52, 150, 15); // ì—˜ë¦¬ë² ì´í„° ê²½ë¡œ ì§€ìš°ê¸°
     LCD_SetBrushColor(RGB_RED);
     LCD_SetPenColor(RGB_GRAY);
-    LCD_DrawFillRect((40 + 16 * now_f), 55, 8, 8); //ÇöÀç ¿¤¸®º£ÀÌÅÍ ±×¸®±â
+    LCD_DrawFillRect((40 + 16 * now_f), 55, 8, 8); //í˜„ì¬ ì—˜ë¦¬ë² ì´í„° ê·¸ë¦¬ê¸°
     LCD_DrawRectangle((40 + 16 * now_f), 55, 8, 8);
     BEEP();
     DelayMS(500);
@@ -318,17 +306,17 @@ void UpMoveELDisplay(void)
     LCD_SetPenColor(RGB_GRAY);
 }
 
-void DnMoveELDisplay(void)
+void DnMoveELDisplay(void)			//í•˜ê°• ì—˜ë¦¬ë² ì´í„° í•¨ìˆ˜
 {
    LCD_SetTextColor(RGB_BLUE);
-    LCD_DisplayChar(2, 2, '<'); //¿¤¸®º£ÀÌÅÍ ÇÏ°­ Ç¥½Ã
+    LCD_DisplayChar(2, 2, '<'); //ì—˜ë¦¬ë² ì´í„° í•˜ê°• í‘œì‹œ
     LCD_SetTextColor(RGB_BLACK);
-    LCD_DisplayChar(2, 0, 'M'); //µ¿ÀÛ¸ğµå Ç¥½Ã
+    LCD_DisplayChar(2, 0, 'M'); //ë™ì‘ëª¨ë“œ í‘œì‹œ
     LCD_SetBrushColor(RGB_YELLOW);
-    LCD_DrawFillRect(0, 52, 150, 15); // ¿¤·¹º£ÀÌÅÍ ÀÌµ¿°æ·Î Áö¿ì±â
+    LCD_DrawFillRect(0, 52, 150, 15); // ì—˜ë ˆë² ì´í„° ì´ë™ê²½ë¡œ ì§€ìš°ê¸°
     LCD_SetBrushColor(RGB_BLUE);
     LCD_SetPenColor(RGB_GRAY);
-    LCD_DrawFillRect((40 + 16 * now_f), 55, 8, 8);   //ÇöÀç ¿¤¸®º£ÀÌÅÍ ±×¸®±â
+    LCD_DrawFillRect((40 + 16 * now_f), 55, 8, 8);   //í˜„ì¬ ì—˜ë¦¬ë² ì´í„° ê·¸ë¦¬ê¸°
     LCD_DrawRectangle((40 + 16 * now_f), 55, 8, 8);  
 
     BEEP();
